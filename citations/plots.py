@@ -41,7 +41,7 @@ def hindex_calc(papers):
             pubmonth = int(round(((float(papers[doi]['citations'][item]['pubyear']) +
                                    (float(papers[doi]['citations'][item]['pubmonth'])-1)/12.) -
                                   start)*12, 0))
-            citation_hist[doi][min(pubmonth, len(citation_hist)-1)] += 1
+            citation_hist[doi][pubmonth] += 1
 
     hidx = []
     h5idx = []
