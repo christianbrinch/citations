@@ -4,8 +4,8 @@ from citations import scrape_dois, ads, pubmed, crossref, plots, publist
 from tqdm import tqdm
 
 # Scrape from Orcid
-# dois, name = scrape_dois.query_orcid('0000-0002-5074-7183')
-dois, name = scrape_dois.query_orcid('0000-0001-8813-4019')
+dois, name = scrape_dois.query_orcid('0000-0002-5074-7183')
+
 
 # Load existing data
 if os.path.exists('datadump.p'):
