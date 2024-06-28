@@ -15,8 +15,14 @@ def query_paper(doi):
         paper['pubyear'] = str(data['message']['created']['date-parts'][0][0])
         paper['pubmonth'] = str(data['message']['created']
                                 ['date-parts'][0][1]).zfill(2)
-        paper['journal'] = data['message']['short-container-title'][0]
-        paper['volume'] = data['message']['volume'][0]
+        if len(data['message']['short-container-title']) > 0:
+            paper['journal'] = data['message']['short-container-title'][0]
+        else:
+            paper['journal'] = 'N/A'
+        if 'volume' in data['message'].keys():
+            paper['volume'] = data['message']['volume'][0]
+        else:
+            paper['volume'] = ''
         paper['issue'] = ''
         paper['pages'] = ''
         paper['source'] = 'crossref'

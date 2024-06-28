@@ -4,8 +4,8 @@ from citations import scrape_dois, ads, pubmed, crossref, plots, publist
 from tqdm import tqdm
 
 # Scrape from Orcid
-dois, name = scrape_dois.query_orcid('0000-0002-5074-7183')
-
+# dois, name = scrape_dois.query_orcid('0000-0002-5074-7183')
+dois, name = scrape_dois.query_orcid('0000-0001-8813-4019')
 
 # Load existing data
 if os.path.exists('datadump.p'):
@@ -13,7 +13,7 @@ if os.path.exists('datadump.p'):
 else:
     papers = {}
 
-
+'''
 for doi in tqdm(dois):
     if doi not in papers.keys():
         papers[doi] = {'status': 'Missing'}
@@ -45,9 +45,8 @@ papers = {k: v for k, v in sorted_papers}
 
 # Save data
 pickle.dump(papers, open("datadump.p", "wb"))
-
+'''
 
 plots.make_plots(papers, name)
-
 publist.to_screen(papers, name)
-publist.make_publist(papers, name)
+# publist.make_publist(papers, name)

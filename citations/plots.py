@@ -41,7 +41,7 @@ def hindex_calc(papers):
             pubmonth = int(round(((float(papers[doi]['citations'][item]['pubyear']) +
                                    (float(papers[doi]['citations'][item]['pubmonth'])-1)/12.) -
                                   start)*12, 0))
-            citation_hist[doi][pubmonth] += 1
+            citation_hist[doi][min(pubmonth, len(citation_hist)-1)] += 1
 
     hidx = []
     h5idx = []
@@ -74,7 +74,7 @@ def citations_in_time(papers, start, fig_nr):
         for item in papers[doi]['citations']:
             pubmonth = int(round(((float(papers[doi]['citations'][item]['pubyear'])+(
                 float(papers[doi]['citations'][item]['pubmonth'])-1)/12.)-start)*12, 0))
-            citation_hist[pubmonth] += 1
+            citation_hist[min(pubmonth, len(citation_hist)-1)] += 1
     axe.plot(start+np.arange(months)/12.,
              np.cumsum(citation_hist), alpha=0.8, lw=1.8)
 
@@ -100,7 +100,7 @@ def citations_per_month(papers, start, fig_nr):
         for item in papers[doi]['citations']:
             pubmonth = int(round((((float(papers[doi]['citations'][item]['pubyear'])+(
                 float(papers[doi]['citations'][item]['pubmonth'])-1)/12.)-start)*12), 0))
-            citation_hist[pubmonth] += 1
+            citation_hist[min(pubmonth, len(citation_hist)-1)] += 1
 
     axe.bar(start+np.arange(months)/12, citation_hist,
             width=1/12., align='edge', facecolor='seagreen')
@@ -189,7 +189,7 @@ def citations_per_paper(papers, name, fig_nr):
                         rotation_mode="anchor", ha="right", fontsize=6)
 
     cites = list(map(int, [len(papers[doi]['citations'])
-                 for doi in papers]))
+                           for doi in papers]))
 
     axe.bar(np.arange(len(papers)), cites,
             color=['maroon' if name in papers[doi]['authors'][0] else 'steelblue' for doi in papers], align='edge')
