@@ -4,6 +4,9 @@ from matplotlib.ticker import AutoMinorLocator
 from matplotlib.ticker import MaxNLocator
 import numpy as np
 from datetime import date
+from scipy.optimize import curve_fit
+import pymcmc
+import pandas as pd
 
 NOW = date.today().year+date.today().month/12.
 
@@ -32,15 +35,18 @@ def hindex_calc(papers):
     ''' Calculate the h-index and the h5-index (h-index over the last 5 years)
     '''
     start = float(min([papers[i]['pubyear'] for i in papers]))
-    months = int(12*(NOW-start))
+    months = int(12*(NOW-start))+3
 
     citation_hist = {}
     for doi in papers:
         citation_hist[doi] = np.zeros(months)
         for item in papers[doi]['citations']:
-            pubmonth = int(round(((float(papers[doi]['citations'][item]['pubyear']) +
-                                   (float(papers[doi]['citations'][item]['pubmonth'])-1)/12.) -
-                                  start)*12, 0))
+            try:
+                pubmonth = int(round(((float(papers[doi]['citations'][item]['pubyear']) +
+                                       (float(papers[doi]['citations'][item]['pubmonth'])-1)/12.) -
+                                      start)*12, 0))
+            except:
+                pubmonth = 0
             citation_hist[doi][pubmonth] += 1
 
     hidx = []
@@ -55,6 +61,10 @@ def hindex_calc(papers):
         h5idx.append(int([i for i, idx in enumerate(cs_month) if i >= idx][0]))
 
     return hidx, h5idx
+
+
+def line(x, a, b):
+    return a*x+b
 
 
 def citations_in_time(papers, start, fig_nr):
@@ -72,11 +82,26 @@ def citations_in_time(papers, start, fig_nr):
     citation_hist = np.zeros(months)
     for doi in papers:
         for item in papers[doi]['citations']:
-            pubmonth = int(round(((float(papers[doi]['citations'][item]['pubyear'])+(
-                float(papers[doi]['citations'][item]['pubmonth'])-1)/12.)-start)*12, 0))
+            try:
+                pubmonth = int(round(((float(papers[doi]['citations'][item]['pubyear'])+(
+                    float(papers[doi]['citations'][item]['pubmonth'])-1)/12.)-start)*12, 0))
+            except:
+                pubmonth = 0
             citation_hist[min(pubmonth, len(citation_hist)-1)] += 1
     axe.plot(start+np.arange(months)/12.,
              np.cumsum(citation_hist), alpha=0.8, lw=1.8)
+
+    y = np.cumsum(citation_hist)[60:]
+    x = np.linspace(0, (len(y)-1)/12., len(y))
+
+    popt, pcov = curve_fit(line, x, y)
+    perr = 3*np.sqrt(np.diag(pcov))
+    y_fit = line(x, *popt)
+    y_fit_up = line(x, *(popt+perr))
+    y_fit_down = line(x, *(popt-perr))
+
+    axe.plot(start+5+x, y_fit, '--', color='grey', alpha=0.8, lw=2)
+    plt.fill_between(start+5+x, y_fit_down, y_fit_up, color='grey', alpha=0.2)
 
     for step in 1000*(np.arange(int(tc/1000))+1):
         axe.step([start-1., NOW+2.], [step, step],
@@ -98,12 +123,22 @@ def citations_per_month(papers, start, fig_nr):
     citation_hist = np.zeros(months)
     for doi in papers:
         for item in papers[doi]['citations']:
-            pubmonth = int(round((((float(papers[doi]['citations'][item]['pubyear'])+(
-                float(papers[doi]['citations'][item]['pubmonth'])-1)/12.)-start)*12), 0))
+            try:
+                pubmonth = int(round((((float(papers[doi]['citations'][item]['pubyear'])+(
+                    float(papers[doi]['citations'][item]['pubmonth'])-1)/12.)-start)*12), 0))
+            except:
+                pubmonth = 0
             citation_hist[min(pubmonth, len(citation_hist)-1)] += 1
 
     axe.bar(start+np.arange(months)/12, citation_hist,
             width=1/12., align='edge', facecolor='seagreen')
+
+    d = {'data': citation_hist}
+    df = pd.DataFrame(data=d)
+    df.index = start+np.arange(months)/12
+
+    ds = pymcmc.DataSet(df, rerun=True)
+    ds.plotmodel(axe, 'data', 'maroon')
 
 
 def hindex_in_time(papers, start, fig_nr):
@@ -156,10 +191,13 @@ def citations_per_paper_in_time(papers, name, start, fig_nr):
         months = int(12*(NOW-ppubmonth)+1)
         citation_hist = np.zeros(months)
         for item in papers[doi]['citations']:
-            pubmonth = min(float(papers[doi]['citations'][item]['pubyear'])+(
-                float(papers[doi]['citations'][item]['pubmonth'])-1)/12., NOW)-ppubmonth
-
-            citation_hist[max(0, int(round(12*pubmonth, 0)))] += 1
+            try:
+                pubmonth = min(float(papers[doi]['citations'][item]['pubyear'])+(
+                    float(papers[doi]['citations'][item]['pubmonth'])-1)/12., NOW)-ppubmonth
+            except:
+                pubmonth = 0
+            citation_hist[min(len(citation_hist)-1,
+                              max(0, int(round(12*pubmonth, 0))))] += 1
 
         axe.plot(np.arange(months)/12.,
                  np.cumsum(citation_hist), alpha=0.8, lw=1.8, color=color)

@@ -47,6 +47,6 @@ papers = {k: v for k, v in sorted_papers}
 pickle.dump(papers, open("datadump.p", "wb"))
 
 
-plots.make_plots(papers, name)
 publist.to_screen(papers, name)
+plots.make_plots(papers, name)
 publist.make_publist(papers, name)

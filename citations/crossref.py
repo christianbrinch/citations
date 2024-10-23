@@ -35,4 +35,10 @@ def query_paper(doi):
 
 
 def get_citations(doi):
-    return []
+    url = f"https://api.crossref.org/works/{doi}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        return {doi+str(i): None for i in range(data['message']['is-referenced-by-count'])}
+    else:
+        return {}
